@@ -1,0 +1,7 @@
+[package]
+name = "pmu3"
+version = "0.1.0"
+authors = ["Adrian L. Shaw <adrianlshaw@gmail.com>"]
+
+[dependencies]
+bitflags = "0.8"
