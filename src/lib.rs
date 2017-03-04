@@ -102,7 +102,7 @@ pub fn write_evtype(idx: u32, mut val: u32) {
 pub fn enable_counter(idx: u32) {
 	let counter: u32 = idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmcntenclr_el0, %0" :: "r" (1 << (counter)));
+		asm!("msr pmcntenset_el0, %0" :: "r" (1 << (counter)));
 	}
 }
 
@@ -113,7 +113,7 @@ pub fn enable_counter(idx: u32) {
 pub fn disable_counter(idx: u32) {
 	let counter: u32 = idx_to_counter(idx);
 	unsafe {
-		// NOT IMPLEMENTED YET
+		asm!("msr pmcntenclr_el0, %0" :: "r" (1 << (counter)));
 	}
 }
 
