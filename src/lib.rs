@@ -50,12 +50,12 @@ unsafe fn private_isb() {
 
 
 #[cfg(any(target_arch = "aarch64"))]
-pub fn get_pmu_reset_flags() {
+pub fn get_pmu_reset_flags() -> u32 {
 	let mut value: u32;
 	unsafe {
-		asm!("mrs %0, pmovsclr_el0" : "=r" (value));
+		asm!("mrs $0, pmovsclr_el0" : "=r" (value));
 		value &= OVSR_MASK;
-		asm!("msr pmovsclr_el0, %0" :: "r" (value));
+		asm!("msr pmovsclr_el0, $0" :: "r" (value));
 	}
 	return value;
 }
@@ -65,7 +65,7 @@ pub fn get_pmu_reset_flags() {
 fn select_counter(idx: u32) {
 	let counter = idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmselr_el0, %0" :: "r" (counter));
+		asm!("msr pmselr_el0, $0" :: "r" (counter));
 		private_isb();
 	}
 }
@@ -73,15 +73,15 @@ fn select_counter(idx: u32) {
 
 #[cfg(any(target_arch = "aarch64"))]
 pub fn write_counter(idx: u32, value: u32) {
-	if (idx == IDX_CYCLE_COUNTER) {
+	if idx == IDX_CYCLE_COUNTER {
 		unsafe {
-			asm!("msr pmccntr_el0, %0" :: "r" (value));
+			asm!("msr pmccntr_el0, $0" :: "r" (value));
 		}
 	}
 	else {
 		select_counter(idx);
 		unsafe {
-			asm!("msr pmxevcntr_el0, %0" :: "r" (value));
+			asm!("msr pmxevcntr_el0, $0" :: "r" (value));
 		}
 	}
 }
@@ -92,7 +92,7 @@ pub fn write_evtype(idx: u32, mut val: u32) {
 	select_counter(idx);
 	val &= EVENT_TYPE_MASK as u32;
 	unsafe {
-		asm!("msr pmxevtyper_el0, %0" :: "r" (val));
+		asm!("msr pmxevtyper_el0, $0" :: "r" (val));
 	}
 }
 /// Enables a particular counter.
@@ -102,7 +102,7 @@ pub fn write_evtype(idx: u32, mut val: u32) {
 pub fn enable_counter(idx: u32) {
 	let counter: u32 = idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmcntenset_el0, %0" :: "r" (1 << (counter)));
+		asm!("msr pmcntenset_el0, $0" :: "r" (1 << (counter)));
 	}
 }
 
@@ -113,7 +113,7 @@ pub fn enable_counter(idx: u32) {
 pub fn disable_counter(idx: u32) {
 	let counter: u32 = idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmcntenclr_el0, %0" :: "r" (1 << (counter)));
+		asm!("msr pmcntenclr_el0, $0" :: "r" (1 << (counter)));
 	}
 }
 
@@ -121,7 +121,7 @@ pub fn disable_counter(idx: u32) {
 pub fn enable_intens(idx: u32) {
 	let counter: u32= idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmintenset_el1, %0" :: "r" (1 << (counter)));
+		asm!("msr pmintenset_el1, $0" :: "r" (1 << (counter)));
 	}
 }
 
@@ -129,13 +129,11 @@ pub fn enable_intens(idx: u32) {
 pub fn disable_intens(idx: u32) {
 	let counter: u32 = idx_to_counter(idx);
 	unsafe {
-		asm!("msr pmintenclr_el1, %0" :: "r" (1 << (counter)));
-	}
-	private_isb();
-	unsafe {
-		asm!("msr pmovsclr_el0, %0" :: "r" (1 << (counter)));
-	}
-	private_isb();
+		asm!("msr pmintenclr_el1, $0" :: "r" (1 << (counter)));
+    	private_isb();
+		asm!("msr pmovsclr_el0, $0" :: "r" (1 << (counter)));
+	    private_isb();
+    }
 }
 
 #[cfg(any(target_arch = "aarch64"))]
@@ -157,15 +155,15 @@ pub fn disable_event(idx: u32) {
 #[cfg(any(target_arch = "aarch64"))]
 pub fn write_pmcr(val: u32) {
 	unsafe {
-		asm!("msr pmcr_el0, %0" :: "r"(val));
+		asm!("msr pmcr_el0, $0" :: "r"(val));
 	}
 }
 
 #[cfg(any(target_arch = "aarch64"))]
 pub fn read_pmcr() -> u32 {
-	let mut val: u32 = 0;
+	let val: u32;
 	unsafe {
-		asm!("mrs %0, pmcr_el0" : "=r" (val));
+		asm!("mrs $0, pmcr_el0" : "=r" (val));
 	}
 	return val
 }
