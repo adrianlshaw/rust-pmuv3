@@ -5,5 +5,8 @@ services:
 
 language: bash
 
+before_script:
+        - chmod 777 *
+
 script:
         - make 
